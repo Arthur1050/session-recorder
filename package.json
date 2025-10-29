@@ -1,0 +1,33 @@
+{
+  "name": "session-recorder",
+  "version": "1.0.0",
+  "description": "A plugin for recording user sessions on websites",
+  "main": "dist/session-recorder.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "webpack --mode=production",
+    "build:dev": "webpack --mode=development",
+    "watch": "webpack --watch --mode=development",
+    "serve": "npm run build && http-server ./dist -p 4000 --cors -c-1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "session",
+    "recorder",
+    "analytics",
+    "user",
+    "tracking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "ts-loader": "^9.5.0",
+    "typescript": "^5.2.2",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "http-server": "^14.1.1"
+  }
+}
