@@ -1,4 +1,5 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/index.ts',
@@ -24,4 +25,14 @@ module.exports = {
     },
     globalObject: 'this',
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/view'),
+          to: path.resolve(__dirname, 'dist/view'),
+        },
+      ],
+    }),
+  ],
 };

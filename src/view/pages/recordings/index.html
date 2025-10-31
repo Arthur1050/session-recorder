@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravações - Session Recorder</title>
+    <link rel="stylesheet" href="../../global-styles.css">
+    <link rel="stylesheet" href="recordings.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-container">
+                <a href="../dashboard/index.html" class="nav-brand">
+                    <span class="icon">📊</span>
+                    <span>Session Recorder</span>
+                </a>
+                
+                <div class="nav-menu">
+                    <a href="../dashboard/index.html" class="nav-link">Dashboard</a>
+                    <a href="../recordings/index.html" class="nav-link active">Gravações</a>
+                    <a href="../analytics/index.html" class="nav-link">Analytics</a>
+                    <a href="../player/index.html" class="nav-link">Player</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Buscar gravações..." id="searchInput">
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>Gravações</h1>
+                <p class="header-subtitle">Gerencie e visualize todas as sessões gravadas</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label>Período:</label>
+                    <select class="filter-select" id="periodFilter">
+                        <option value="all">Todos</option>
+                        <option value="today">Hoje</option>
+                        <option value="week">Esta semana</option>
+                        <option value="month">Este mês</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Duração:</label>
+                    <select class="filter-select" id="durationFilter">
+                        <option value="all">Todas</option>
+                        <option value="short">Curta (&lt; 5min)</option>
+                        <option value="medium">Média (5-20min)</option>
+                        <option value="long">Longa (&gt; 20min)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Ordenar:</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="recent">Mais recentes</option>
+                        <option value="oldest">Mais antigas</option>
+                        <option value="duration">Duração</option>
+                        <option value="events">Eventos</option>
+                    </select>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="clearFilters()">Limpar filtros</button>
+            </div>
+
+            <!-- Recordings Grid -->
+            <div class="recordings-grid" id="recordingsGrid"></div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </main>
+    </div>
+
+    <!-- Delete Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <h3>Confirmar Exclusão</h3>
+            <p>Tem certeza que deseja excluir esta gravação? Esta ação não pode ser desfeita.</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../scripts/recordings.js"></script>
+</body>
+</html>

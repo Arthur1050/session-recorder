@@ -249,7 +249,7 @@ export class SessionReplayer {
     this.stop();
 
     // Encontrar o evento mais próximo do tempo especificado
-    const startTime = this.session.startTime.getTime();
+    const startTime = new Date(this.session.startTime).getTime();
     const targetTime = startTime + timeInMs;
 
     const eventIndex = this.findClosestEventIndex(targetTime);
@@ -268,7 +268,7 @@ export class SessionReplayer {
 
     let index = 0;
     for (let i = 0; i < this.session.events.length; i++) {
-      if (this.session.events[i].timestamp.getTime() <= targetTime) {
+      if (new Date(this.session.events[i].timestamp).getTime() <= targetTime) {
         index = i;
       } else {
         break;
@@ -342,8 +342,8 @@ export class SessionReplayer {
     currentEvent: SessionEvent,
     nextEvent: SessionEvent
   ): number {
-    const currentTime = currentEvent.timestamp.getTime();
-    const nextTime = nextEvent.timestamp.getTime();
+    const currentTime = new Date(currentEvent.timestamp).getTime();
+    const nextTime = new Date(nextEvent.timestamp).getTime();
     return (nextTime - currentTime) / this.replayController.getSpeed();
   }
 }

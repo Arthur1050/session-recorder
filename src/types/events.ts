@@ -2,8 +2,8 @@ export interface RecordingSession {
   id: string;
   userId?: string;
   userAgent?: string;
-  startTime: Date;
-  endTime: Date;
+  startTime: Date|string;
+  endTime: Date|string;
   events: Array<SessionEvent>;
   metadata?: Record<string, unknown>;
   viewport?: {
@@ -19,7 +19,7 @@ export interface RecordingSession {
 }
 
 export interface SessionEvent {
-  timestamp: Date;
+  timestamp: Date|string;
   type: EventType;
   data:
     | MouseEventData

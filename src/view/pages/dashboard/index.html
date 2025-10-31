@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Session Recorder</title>
+    <link rel="stylesheet" href="../../global-styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-container">
+                <a href="../dashboard/index.html" class="nav-brand">
+                    <span class="icon">📊</span>
+                    <span>Session Recorder</span>
+                </a>
+                
+                <div class="nav-menu">
+                    <a href="../dashboard/index.html" class="nav-link active">Dashboard</a>
+                    <a href="../recordings/index.html" class="nav-link">Gravações</a>
+                    <a href="../analytics/index.html" class="nav-link">Analytics</a>
+                    <a href="../player/index.html" class="nav-link">Player</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="Buscar gravações...">
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='../recordings/index.html'">
+                        <span>➕</span>
+                        Nova Gravação
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1>Dashboard</h1>
+                <p class="header-subtitle">Visão geral das suas sessões gravadas</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Sessões ao Longo do Tempo</h3>
+                        <div class="chart-filters">
+                            <button class="chart-filter-btn active" data-period="7">7D</button>
+                            <button class="chart-filter-btn" data-period="30">30D</button>
+                            <button class="chart-filter-btn" data-period="90">90D</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sessionsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Distribuição de Eventos</h3>
+                        <div class="chart-filters">
+                            <button class="chart-filter-btn active" data-time="today">Hoje</button>
+                            <button class="chart-filter-btn" data-time="week">Semana</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="eventsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Duração das Sessões</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="engagementChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3>Métricas de Performance</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Recordings Table -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Gravações Recentes</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-ghost btn-sm">Filtros</button>
+                        <button class="btn btn-secondary btn-sm">Exportar</button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>URL</th>
+                            <th>Duração</th>
+                            <th>Eventos</th>
+                            <th>Data</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentRecordingsTable"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../scripts/dashboard.js"></script>
+</body>
+</html>

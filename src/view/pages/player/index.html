@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player - Session Recorder</title>
+    <link rel="stylesheet" href="../../global-styles.css">
+    <link rel="stylesheet" href="player.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Navigation -->
+        <nav class="top-nav">
+            <div class="nav-container">
+                <a href="../dashboard/index.html" class="nav-brand">
+                    <span class="icon">📊</span>
+                    <span>Session Recorder</span>
+                </a>
+                
+                <div class="nav-menu">
+                    <a href="../dashboard/index.html" class="nav-link">Dashboard</a>
+                    <a href="../recordings/index.html" class="nav-link">Gravações</a>
+                    <a href="../analytics/index.html" class="nav-link">Analytics</a>
+                    <a href="../player/index.html" class="nav-link active">Player</a>
+                </div>
+                
+                <div class="nav-actions">
+                    <button class="btn btn-secondary" onclick="window.history.back()">
+                        <span>←</span> Voltar
+                    </button>
+                    <button class="btn btn-secondary" onclick="downloadRecording()">
+                        <span>⬇️</span> Download
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content player-view">
+            <!-- Recording Info -->
+            <div class="recording-info-card">
+                <div class="info-grid" id="recordingInfo"></div>
+            </div>
+
+            <!-- Player -->
+            <div class="player-card">
+                <div class="player-container">
+                    <div class="player-screen">
+                        <iframe id="playerIframe" sandbox="allow-same-origin allow-scripts"></iframe>
+                        <div class="player-cursor" id="playerCursor" style="display: none;"></div>
+                        <div class="loading-spinner" id="loadingSpinner">
+                            <div class="spinner"></div>
+                            <span>Carregando gravação...</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="player-controls">
+                    <div class="timeline-container">
+                        <input type="range" class="timeline" id="timeline" min="0" max="100" value="0">
+                    </div>
+                    
+                    <div class="controls-bar">
+                        <div class="controls-left">
+                            <button class="control-btn" id="playPauseBtn" onclick="togglePlayPause()">
+                                <span id="playIcon">▶️</span>
+                            </button>
+                            <button class="control-btn" onclick="skipBackward()">⏪</button>
+                            <button class="control-btn" onclick="skipForward()">⏩</button>
+                        </div>
+                        
+                        <div class="controls-center">
+                            <div class="time-display">
+                                <span id="currentTime">00:00</span>
+                                <span>/</span>
+                                <span id="totalTime">00:00</span>
+                            </div>
+                        </div>
+                        
+                        <div class="controls-right">
+                            <select class="speed-select" id="speedSelect" onchange="changeSpeed()">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Timeline -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Linha do Tempo de Eventos</h3>
+                    <div class="table-actions">
+                        <button class="btn btn-ghost btn-sm active" onclick="filterEvents('all')">Todos</button>
+                        <button class="btn btn-ghost btn-sm" onclick="filterEvents('click')">Clicks</button>
+                        <button class="btn btn-ghost btn-sm" onclick="filterEvents('key')">Teclas</button>
+                        <button class="btn btn-ghost btn-sm" onclick="filterEvents('nav')">Navegação</button>
+                    </div>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Tempo</th>
+                                <th>Tipo</th>
+                                <th>Detalhes</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../scripts/player.js"></script>
+</body>
+</html>

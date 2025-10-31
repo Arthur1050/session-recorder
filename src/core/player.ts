@@ -257,6 +257,7 @@ export class SessionPlayer {
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
+    iframe.style.pointerEvents = "none";
 
     // Apply custom iframe styles
     Object.entries(this.playerOptions.iframeStyles).forEach(([key, value]) => {
@@ -337,8 +338,8 @@ export class SessionPlayer {
   private handleEvent(event: any): void {
     if (!this.session) return;
 
-    const sessionStartTime = this.session.startTime.getTime();
-    const eventTime = event.timestamp.getTime();
+    const sessionStartTime = new Date(this.session.startTime).getTime();
+    const eventTime = new Date(event.timestamp).getTime();
     this.currentTime = eventTime - sessionStartTime;
 
     this.updateTimelineProgress();
@@ -402,12 +403,15 @@ export class SessionPlayer {
 
     // Calculate session duration
     if (session.startTime && session.endTime) {
-      this.duration = session.endTime.getTime() - session.startTime.getTime();
+      this.session.startTime = new Date(session.startTime);
+      this.session.endTime = new Date(session.endTime);
+
+      this.duration = this.session.startTime.getTime() - this.session.endTime.getTime();
     } else if (session.events.length > 1) {
       const firstEvent = session.events[0];
       const lastEvent = session.events[session.events.length - 1];
       this.duration =
-        lastEvent.timestamp.getTime() - firstEvent.timestamp.getTime();
+        new Date(lastEvent.timestamp).getTime() - new Date(firstEvent.timestamp).getTime();
     } else {
       this.duration = 0;
     }
