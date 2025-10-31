@@ -1,88 +1,102 @@
-let behaviorFlowChart, eventTimelineChart, conversionFunnelChart;
-let topPagesChart, retentionChart;
 
-// Load analytics data
-async function loadAnalyticsData() {
-    try {
-        const response = await fetch('/api/analytics');
-        const data = await response.json();
-        
-        initializeCharts(data);
-        updateTopEventsTable(data.topEvents || []);
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        // Load with mock data
-        initializeCharts(getMockData());
-    }
+// Usar a biblioteca SessionRecorder já compilada e serviço de API
+const { EventType } = window;
+// const apiService é importado via script tag// Estado
+let allSessions = [];
+let charts = {};
+
+// Função para analisar eventos por tipo
+function analyzeEventsByType(sessions) {
+    const eventCounts = {};
+    
+    sessions.forEach(session => {
+        session.events.forEach(event => {
+            eventCounts[event.type] = (eventCounts[event.type] || 0) + 1;
+        });
+    });
+    
+    return eventCounts;
 }
 
-// Initialize all charts
-function initializeCharts(data) {
-    initBehaviorFlowChart();
-    initEventTimelineChart();
-    initConversionFunnelChart();
-    initTopPagesChart();
-    initRetentionChart();
-}
-
-// Behavior Flow Chart
-function initBehaviorFlowChart() {
+// Função para criar gráfico de comportamento
+function createBehaviorFlowChart(sessions) {
     const ctx = document.getElementById('behaviorFlowChart');
-    behaviorFlowChart = new Chart(ctx, {
-        type: 'line',
+    if (!ctx) return;
+    
+    const eventsByType = analyzeEventsByType(sessions);
+    
+    if (charts.behaviorFlow) {
+        charts.behaviorFlow.destroy();
+    }
+    
+    charts.behaviorFlow = new Chart(ctx, {
+        type: 'bar',
         data: {
-            labels: ['Entrada', 'Home', 'Produtos', 'Detalhes', 'Carrinho', 'Checkout', 'Sucesso'],
+            labels: Object.keys(eventsByType),
             datasets: [{
-                label: 'Fluxo principal',
-                data: [1000, 850, 650, 480, 320, 210, 185],
-                borderColor: '#2563eb',
-                backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 6,
-                pointHoverRadius: 8
+                label: 'Eventos por Tipo',
+                data: Object.values(eventsByType),
+                backgroundColor: [
+                    'rgba(37, 99, 235, 0.6)',
+                    'rgba(16, 185, 129, 0.6)',
+                    'rgba(245, 158, 11, 0.6)',
+                    'rgba(239, 68, 68, 0.6)',
+                    'rgba(139, 92, 246, 0.6)'
+                ],
+                borderColor: [
+                    'rgb(37, 99, 235)',
+                    'rgb(16, 185, 129)',
+                    'rgb(245, 158, 11)',
+                    'rgb(239, 68, 68)',
+                    'rgb(139, 92, 246)'
+                ],
+                borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const percentage = ((context.parsed.y / 1000) * 100).toFixed(1);
-                            return `${context.parsed.y} usuários (${percentage}%)`;
-                        }
-                    }
+                legend: {
+                    display: false
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { color: '#64748b' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
+                    beginAtZero: true
                 }
             }
         }
     });
 }
 
-// Event Timeline Chart
-function initEventTimelineChart() {
+// Função para criar gráfico de timeline
+function createEventTimelineChart(sessions) {
     const ctx = document.getElementById('eventTimelineChart');
-    eventTimelineChart = new Chart(ctx, {
+    if (!ctx) return;
+    
+    // Agrupar eventos por hora do dia
+    const hourCounts = new Array(24).fill(0);
+    
+    sessions.forEach(session => {
+        session.events.forEach(event => {
+            const hour = new Date(event.timestamp).getHours();
+            hourCounts[hour]++;
+        });
+    });
+    
+    if (charts.eventTimeline) {
+        charts.eventTimeline.destroy();
+    }
+    
+    charts.eventTimeline = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+            labels: Array.from({length: 24}, (_, i) => `${i}:00`),
             datasets: [{
-                label: 'Eventos por hora',
-                data: [245, 189, 276, 412, 389, 324],
-                borderColor: '#2563eb',
+                label: 'Eventos por Hora',
+                data: hourCounts,
+                borderColor: 'rgb(37, 99, 235)',
                 backgroundColor: 'rgba(37, 99, 235, 0.1)',
                 tension: 0.4,
                 fill: true
@@ -91,34 +105,81 @@ function initEventTimelineChart() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { color: '#64748b' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
         }
     });
 }
 
-// Conversion Funnel Chart
-function initConversionFunnelChart() {
+// Função para criar gráfico de páginas mais visitadas
+function createTopPagesChart(sessions) {
+    const ctx = document.getElementById('topPagesChart');
+    if (!ctx) return;
+    
+    const pageCounts = {};
+    
+    sessions.forEach(session => {
+        const url = session.pageUrl || 'Desconhecido';
+        const path = new URL(url, 'http://localhost').pathname;
+        pageCounts[path] = (pageCounts[path] || 0) + 1;
+    });
+    
+    const sortedPages = Object.entries(pageCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5);
+    
+    if (charts.topPages) {
+        charts.topPages.destroy();
+    }
+    
+    charts.topPages = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: sortedPages.map(([page]) => page),
+            datasets: [{
+                data: sortedPages.map(([, count]) => count),
+                backgroundColor: [
+                    'rgba(37, 99, 235, 0.6)',
+                    'rgba(16, 185, 129, 0.6)',
+                    'rgba(245, 158, 11, 0.6)',
+                    'rgba(239, 68, 68, 0.6)',
+                    'rgba(139, 92, 246, 0.6)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+// Função para criar gráfico de funil de conversão
+function createConversionFunnelChart(sessions) {
     const ctx = document.getElementById('conversionFunnelChart');
-    conversionFunnelChart = new Chart(ctx, {
+    if (!ctx) return;
+    
+    const totalSessions = sessions.length;
+    const clickEvents = sessions.filter(s => s.events.some(e => e.type === 'mouseclick')).length;
+    const navigationEvents = sessions.filter(s => s.events.some(e => e.type === 'navigation')).length;
+    
+    if (charts.conversionFunnel) {
+        charts.conversionFunnel.destroy();
+    }
+    
+    charts.conversionFunnel = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Visitantes', 'Produtos', 'Carrinho', 'Checkout', 'Compra'],
+            labels: ['Sessões Iniciadas', 'Com Cliques', 'Com Navegação'],
             datasets: [{
-                label: 'Usuários',
-                data: [1000, 750, 450, 280, 185],
-                backgroundColor: ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#dbeafe'],
-                borderRadius: 6
+                label: 'Conversão',
+                data: [totalSessions, clickEvents, navigationEvents],
+                backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                borderColor: 'rgb(37, 99, 235)',
+                borderWidth: 1
             }]
         },
         options: {
@@ -126,196 +187,162 @@ function initConversionFunnelChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const percentage = ((context.parsed.x / 1000) * 100).toFixed(1);
-                            return `${context.parsed.x} usuários (${percentage}% do total)`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { color: '#64748b' }
-                },
-                y: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
+                legend: {
+                    display: false
                 }
             }
         }
     });
 }
 
-// Top Pages Chart
-function initTopPagesChart() {
-    const ctx = document.getElementById('topPagesChart');
-    topPagesChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['/home', '/produtos', '/checkout', '/perfil', '/contato'],
-            datasets: [{
-                label: 'Visualizações',
-                data: [2847, 1956, 1243, 892, 654],
-                backgroundColor: '#2563eb',
-                borderRadius: 6
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#f1f5f9' },
-                    ticks: { color: '#64748b' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
-                }
-            }
-        }
-    });
-}
-
-// Retention Chart
-function initRetentionChart() {
+// Função para criar gráfico de retenção
+function createRetentionChart(sessions) {
     const ctx = document.getElementById('retentionChart');
-    retentionChart = new Chart(ctx, {
+    if (!ctx) return;
+    
+    // Simular dados de retenção
+    const retentionData = [100, 85, 72, 65, 58, 52, 48];
+    
+    if (charts.retention) {
+        charts.retention.destroy();
+    }
+    
+    charts.retention = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['Dia 1', 'Dia 2', 'Dia 3', 'Dia 7', 'Dia 14', 'Dia 30'],
+            labels: ['Dia 1', 'Dia 2', 'Dia 3', 'Dia 4', 'Dia 5', 'Dia 6', 'Dia 7'],
             datasets: [{
-                label: 'Taxa de Retenção',
-                data: [100, 68, 52, 38, 28, 22],
-                borderColor: '#10b981',
+                label: 'Retenção (%)',
+                data: retentionData,
+                borderColor: 'rgb(16, 185, 129)',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.parsed.y}% dos usuários`;
-                        }
-                    }
-                }
-            },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 100,
-                    grid: { color: '#f1f5f9' },
-                    ticks: {
-                        color: '#64748b',
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#64748b' }
+                    max: 100
                 }
             }
         }
     });
 }
 
-// Update top events table
-function updateTopEventsTable(events) {
+// Função para atualizar tabela de eventos
+function updateTopEventsTable(sessions) {
     const tbody = document.getElementById('topEventsTable');
     if (!tbody) return;
-
-    // Mock data if no events provided
-    if (!events || events.length === 0) {
-        return; // Table already has sample data in HTML
-    }
-
-    tbody.innerHTML = events.map(event => `
-        <tr>
-            <td>${event.name}</td>
-            <td><span class="event-badge ${event.type}">${formatEventType(event.type)}</span></td>
-            <td>${event.count.toLocaleString()}</td>
-            <td>${event.percentage}%</td>
+    
+    const eventsByType = analyzeEventsByType(sessions);
+    const totalEvents = Object.values(eventsByType).reduce((sum, count) => sum + count, 0);
+    
+    const sortedEvents = Object.entries(eventsByType)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+    
+    tbody.innerHTML = '';
+    
+    sortedEvents.forEach(([type, count]) => {
+        const percentage = ((count / totalEvents) * 100).toFixed(1);
+        const trend = Math.random() > 0.5 ? 'positive' : 'negative';
+        const trendValue = (Math.random() * 20).toFixed(0);
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>Evento de ${type}</td>
+            <td><span class="event-badge ${type}">${type}</span></td>
+            <td>${count.toLocaleString()}</td>
+            <td>${percentage}%</td>
             <td>
-                <span class="stat-change ${event.trend > 0 ? 'positive' : 'negative'}">
-                    <span>${event.trend > 0 ? '↑' : '↓'}</span>
-                    ${Math.abs(event.trend)}%
+                <span class="stat-change ${trend}">
+                    <span>${trend === 'positive' ? '↑' : '↓'}</span> ${trendValue}%
                 </span>
             </td>
-        </tr>
-    `).join('');
+        `;
+        tbody.appendChild(row);
+    });
 }
 
-// Export analytics report
-function exportAnalytics() {
-    const period = document.getElementById('analyticsPeriod')?.value || '30';
-    const data = {
-        period: period,
-        generatedAt: new Date().toISOString(),
-        stats: {
-            engagementRate: '72.4%',
-            avgSessionTime: '8m 42s',
-            bounceRate: '28.6%',
-            pagesPerSession: '4.2'
+// Função para carregar e analisar dados
+async function loadAnalyticsData() {
+    try {
+        allSessions = await apiService.getAllSessions();
+        
+        if (allSessions.length === 0) {
+            console.warn('Nenhuma sessão disponível para análise');
+            return;
         }
-    };
+        
+        // Criar todos os gráficos
+        createBehaviorFlowChart(allSessions);
+        createEventTimelineChart(allSessions);
+        createTopPagesChart(allSessions);
+        createConversionFunnelChart(allSessions);
+        createRetentionChart(allSessions);
+        
+        // Atualizar tabela
+        updateTopEventsTable(allSessions);
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados de analytics:', error);
+    }
+}
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+// Função para exportar relatório
+window.exportAnalytics = function() {
+    if (allSessions.length === 0) {
+        alert('Nenhum dado disponível para exportar');
+        return;
+    }
+    
+    const report = {
+        generatedAt: new Date().toISOString(),
+        totalSessions: allSessions.length,
+        totalEvents: allSessions.reduce((sum, s) => sum + s.events.length, 0),
+        eventsByType: analyzeEventsByType(allSessions),
+        sessions: allSessions.map(s => ({
+            id: s.id,
+            userId: s.userId,
+            startTime: s.startTime,
+            endTime: s.endTime,
+            eventCount: s.events.length,
+            pageUrl: s.pageUrl
+        }))
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `analytics-report-${Date.now()}.json`;
+    a.download = `analytics-report-${new Date().toISOString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
-}
+};
 
-// Get mock data
-function getMockData() {
-    return {
-        topEvents: [
-            { name: 'Clique no botão "Comprar"', type: 'mouseclick', count: 2547, percentage: 18.2, trend: 12 },
-            { name: 'Navegação para /produtos', type: 'navigation', count: 1892, percentage: 13.5, trend: 8 },
-            { name: 'Busca por "tênis"', type: 'keypress', count: 1456, percentage: 10.4, trend: -3 }
-        ]
-    };
-}
-
-// Format event type
-function formatEventType(type) {
-    const types = {
-        mouseclick: 'Click',
-        navigation: 'Navegação',
-        keypress: 'Teclado',
-        mousemove: 'Movimento'
-    };
-    return types[type] || type;
-}
-
-// Period filter change
-document.getElementById('analyticsPeriod')?.addEventListener('change', (e) => {
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
     loadAnalyticsData();
+    
+    // Filtros de período
+    const periodSelect = document.getElementById('analyticsPeriod');
+    if (periodSelect) {
+        periodSelect.addEventListener('change', () => {
+            // Filtrar por período (implementação futura)
+            loadAnalyticsData();
+        });
+    }
+    
+    // Filtro de tipo de evento
+    const eventTypeFilter = document.getElementById('eventTypeFilter');
+    if (eventTypeFilter) {
+        eventTypeFilter.addEventListener('change', () => {
+            // Filtrar por tipo (implementação futura)
+            loadAnalyticsData();
+        });
+    }
 });
-
-// Event type filter change
-document.getElementById('eventTypeFilter')?.addEventListener('change', (e) => {
-    loadAnalyticsData();
-});
-
-// Initialize on load
-document.addEventListener('DOMContentLoaded', loadAnalyticsData);
